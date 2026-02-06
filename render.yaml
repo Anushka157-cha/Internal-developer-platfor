@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: idp-backend
+    runtime: node
+    plan: free
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm run start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: DATABASE_HOST
+        sync: false
+      - key: DATABASE_PORT
+        value: 5432
+      - key: DATABASE_NAME
+        value: idp_db
+      - key: DATABASE_USER
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: REDIS_HOST
+        sync: false
+      - key: REDIS_PORT
+        value: 6379
+      - key: REDIS_PASSWORD
+        sync: false
+
+  - type: pserver
+    name: idp-postgres
+    ipAddress: 10.0.0.2
+    plan: free
+    postgresVersion: 15
+    databaseName: idp_db
+    user: idp_user
+    region: oregon
+
+  - type: redis
+    name: idp-redis
+    plan: free
+    region: oregon
+    ipAddress: 10.0.0.3
