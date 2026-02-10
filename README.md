@@ -2,6 +2,17 @@
 
 A production-grade Internal Developer Platform built with modern technologies, designed for engineering teams to manage services, deployments, feature flags, and system observability.
 
+# Internal Developer Platform (IDP)
+
+## 🚀 Live Demo
+- **Application:** https://frontend-eight-lilac-25.vercel.app
+- **API:** https://idp-backend-nnzb.onrender.com/api/health
+
+## Tech Stack
+- **Frontend:** React + Vite + TypeScript + TailwindCSS (Deployed on Vercel)
+- **Backend:** NestJS + PostgreSQL + Redis (Deployed on Render.com)
+
+
 ## 🏗️ Architecture Overview
 
 The IDP follows a modular, microservices-inspired architecture:
