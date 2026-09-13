@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Shield, Terminal, Eye, Sparkles } from 'lucide-react';
+import { LogIn, Shield, Terminal, Eye, Sparkles } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -40,31 +40,28 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4 py-12">
-      <div className="max-w-md w-full space-y-6">
-        {/* Brand Header */}
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-500 to-cyan-400 text-white font-bold text-xl shadow-lg shadow-indigo-500/20 mb-3">
-            IDP
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 px-4 py-12">
+      <div className="max-w-md w-full">
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          {/* Card Header matching SignupPage theme */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-100 mb-4">
+              <LogIn className="h-8 w-8 text-primary-600" />
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900">Sign In</h2>
+            <p className="text-gray-600 mt-2">Sign in to your IDP platform</p>
           </div>
-          <h2 className="text-2xl font-bold tracking-tight text-white">Internal Developer Platform</h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Enterprise multi-tenant microservices deployment & observability engine
-          </p>
-        </div>
 
-        {/* Login Card */}
-        <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-7 shadow-xl backdrop-blur-sm">
           {error && (
-            <div className="mb-4 p-3 bg-red-950/40 border border-red-800 text-red-300 rounded-lg text-xs">
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="email" className="block text-xs font-semibold text-slate-300 mb-1">
-                Corporate Email
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Email Address
               </label>
               <input
                 id="email"
@@ -72,17 +69,17 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-mono"
-                placeholder="dev@example.com"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+                placeholder="you@company.com"
               />
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label htmlFor="password" className="block text-xs font-semibold text-slate-300">
+              <div className="flex items-center justify-between mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                   Password
                 </label>
-                <Link to="/forgot-password" className="text-[11px] text-indigo-400 hover:text-indigo-300">
+                <Link to="/forgot-password" className="text-sm text-primary-600 hover:text-primary-700 font-medium">
                   Forgot Password?
                 </Link>
               </div>
@@ -92,35 +89,38 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 font-mono"
-                placeholder="••••••••••••"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+                placeholder="••••••••"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 bg-indigo-600 hover:bg-indigo-500 text-white py-2.5 rounded-lg text-xs font-semibold transition-all shadow-md shadow-indigo-600/20 disabled:opacity-50"
+              className="w-full bg-primary-600 text-white py-3 rounded-lg font-medium hover:bg-primary-700 transition-colors shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Authenticating...' : 'Sign In with Credentials'}
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
-          {/* Quick Demo Access Buttons */}
-          <div className="mt-6 pt-5 border-t border-slate-800/80">
-            <div className="flex items-center space-x-1.5 text-xs text-slate-400 mb-3">
-              <Sparkles className="h-3.5 w-3.5 text-cyan-400" />
-              <span className="font-semibold text-slate-300">Evaluate with Demo Roles (Instant):</span>
+          {/* Instant Demo Roles (Matching Clean Light Card Theme) */}
+          <div className="mt-6 pt-6 border-t border-gray-100">
+            <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+              <span className="font-semibold text-gray-700 flex items-center">
+                <Sparkles className="h-3.5 w-3.5 text-primary-600 mr-1.5" />
+                Instant Demo Roles:
+              </span>
+              <span className="text-gray-400 text-xs">1-Click Access</span>
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2.5">
               <button
                 type="button"
                 onClick={() => handleDemoLogin('ADMIN')}
                 disabled={loading}
-                className="p-2 bg-purple-950/40 hover:bg-purple-900/60 border border-purple-800/80 text-purple-300 rounded-lg text-[11px] font-mono font-semibold transition-all flex flex-col items-center"
+                className="p-2.5 bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 rounded-lg text-xs font-semibold transition-all flex flex-col items-center shadow-xs"
               >
-                <Shield className="h-4 w-4 mb-1 text-purple-400" />
+                <Shield className="h-4 w-4 mb-1 text-purple-600" />
                 Admin
               </button>
 
@@ -128,9 +128,9 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => handleDemoLogin('DEVELOPER')}
                 disabled={loading}
-                className="p-2 bg-blue-950/40 hover:bg-blue-900/60 border border-blue-800/80 text-blue-300 rounded-lg text-[11px] font-mono font-semibold transition-all flex flex-col items-center"
+                className="p-2.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 rounded-lg text-xs font-semibold transition-all flex flex-col items-center shadow-xs"
               >
-                <Terminal className="h-4 w-4 mb-1 text-blue-400" />
+                <Terminal className="h-4 w-4 mb-1 text-blue-600" />
                 Developer
               </button>
 
@@ -138,19 +138,21 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => handleDemoLogin('VIEWER')}
                 disabled={loading}
-                className="p-2 bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-800/80 text-emerald-300 rounded-lg text-[11px] font-mono font-semibold transition-all flex flex-col items-center"
+                className="p-2.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 rounded-lg text-xs font-semibold transition-all flex flex-col items-center shadow-xs"
               >
-                <Eye className="h-4 w-4 mb-1 text-emerald-400" />
+                <Eye className="h-4 w-4 mb-1 text-emerald-600" />
                 Viewer
               </button>
             </div>
           </div>
 
-          <div className="mt-5 text-center text-xs text-slate-400">
-            Need an account?{' '}
-            <Link to="/signup" className="text-indigo-400 hover:text-indigo-300 font-semibold">
-              Create platform account
-            </Link>
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Need an account?{' '}
+              <Link to="/signup" className="text-primary-600 hover:text-primary-700 font-medium">
+                Create Account
+              </Link>
+            </p>
           </div>
         </div>
       </div>
