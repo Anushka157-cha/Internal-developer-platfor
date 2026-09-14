@@ -10,15 +10,6 @@ import {
   ExternalLink,
   AlertTriangle,
 } from 'lucide-react';
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
 import { Link } from 'react-router-dom';
 
 interface DashboardMetricsResponse {
@@ -232,7 +223,7 @@ export default function DashboardPage() {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* 7-Day Deployment Velocity Trend Chart */}
-        <div className="lg:col-span-2 bg-slate-950/70 border border-slate-800/80 rounded-xl p-5 shadow-sm">
+        <div className="lg:col-span-2 bg-slate-950/70 border border-slate-800/80 rounded-xl p-5 shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-base font-semibold text-white">7-Day Deployment Velocity</h2>
@@ -250,51 +241,55 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={deploymentTrends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorSuccess" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
-                  </linearGradient>
-                  <linearGradient id="colorFailed" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                <XAxis dataKey="day" stroke="#64748b" tick={{ fill: '#64748b', fontSize: 11 }} />
-                <YAxis allowDecimals={false} stroke="#64748b" tick={{ fill: '#64748b', fontSize: 11 }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#0f172a',
-                    border: '1px solid #334155',
-                    borderRadius: '0.5rem',
-                    color: '#f8fafc',
-                    fontSize: '12px',
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="successful"
-                  name="Successful"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill="url(#colorSuccess)"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="failed"
-                  name="Failed"
-                  stroke="#ef4444"
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill="url(#colorFailed)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+          {/* Velocity Bar Chart */}
+          <div className="h-56 w-full flex flex-col justify-end pt-4 pb-2">
+            <div className="grid grid-cols-7 gap-2 sm:gap-4 h-44 items-end px-2 border-b border-slate-800/80">
+              {deploymentTrends.map((trend, idx) => {
+                const maxVal = Math.max(...deploymentTrends.map((t) => (t.successful || 0) + (t.failed || 0)), 12);
+                const successHeight = Math.round(((trend.successful || 0) / maxVal) * 100);
+                const failedHeight = Math.round(((trend.failed || 0) / maxVal) * 100);
+                const totalCount = (trend.successful || 0) + (trend.failed || 0);
+
+                return (
+                  <div key={idx} className="flex flex-col items-center h-full justify-end group relative">
+                    {/* Tooltip on Hover */}
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-12 z-20 pointer-events-none bg-slate-900 border border-slate-700 text-white text-[11px] rounded-lg py-1.5 px-2.5 shadow-xl whitespace-nowrap font-mono">
+                      <p className="font-semibold text-slate-300">{trend.date || trend.day}</p>
+                      <p className="text-emerald-400">Success: {trend.successful || 0}</p>
+                      {trend.failed > 0 && <p className="text-red-400">Failed: {trend.failed}</p>}
+                    </div>
+
+                    {/* Bar Stack */}
+                    <div className="w-full max-w-[36px] flex flex-col justify-end items-center h-full space-y-1">
+                      {/* Value label on top */}
+                      <span className="text-[10px] font-mono text-slate-400 mb-1 group-hover:text-white transition-colors">
+                        {totalCount}
+                      </span>
+
+                      <div className="w-full rounded-t-md overflow-hidden flex flex-col justify-end bg-slate-900/40">
+                        {/* Failed portion */}
+                        {trend.failed > 0 && (
+                          <div
+                            style={{ height: `${Math.max(failedHeight, 6)}%` }}
+                            className="w-full bg-red-500/80 hover:bg-red-400 transition-colors"
+                          />
+                        )}
+                        {/* Success portion */}
+                        <div
+                          style={{ height: `${Math.max(successHeight, 8)}%` }}
+                          className="w-full bg-gradient-to-t from-emerald-600 to-emerald-400 hover:from-emerald-500 hover:to-emerald-300 transition-all rounded-t-sm shadow-sm shadow-emerald-500/20"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Day label */}
+                    <span className="mt-2 text-xs font-mono text-slate-400 group-hover:text-cyan-400 transition-colors">
+                      {trend.day}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
