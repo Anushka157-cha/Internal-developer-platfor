@@ -18,10 +18,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
 } from 'recharts';
 import { Link } from 'react-router-dom';
 
@@ -123,9 +119,8 @@ export default function DashboardPage() {
     averageDeploymentDurationSeconds: 0,
     totalFeatureFlags: 0,
   };
-  const deploymentTrends = metrics?.deploymentTrends || [];
-  const recentDeployments = metrics?.recentDeployments || [];
-  const serviceHealthDistribution = metrics?.serviceHealthDistribution || [];
+  const deploymentTrends = Array.isArray(metrics?.deploymentTrends) ? metrics.deploymentTrends : [];
+  const recentDeployments = Array.isArray(metrics?.recentDeployments) ? metrics.recentDeployments : [];
 
   const statCards = [
     {
@@ -303,43 +298,99 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Service Health Distribution Pie */}
+        {/* Service Health Distribution Donut */}
         <div className="bg-slate-950/70 border border-slate-800/80 rounded-xl p-5 shadow-sm flex flex-col justify-between">
           <div>
-            <h2 className="text-base font-semibold text-white">Service Health Health Distribution</h2>
+            <h2 className="text-base font-semibold text-white">Service Health Distribution</h2>
             <p className="text-xs text-slate-400">Live HTTP probe status across registry</p>
           </div>
 
-          <div className="h-52 w-full my-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={serviceHealthDistribution}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={75}
-                  paddingAngle={4}
-                  dataKey="value"
-                >
-                  {serviceHealthDistribution.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#0f172a',
-                    border: '1px solid #334155',
-                    borderRadius: '0.5rem',
-                    color: '#f8fafc',
-                    fontSize: '12px',
-                  }}
+          <div className="h-52 w-full my-2 flex flex-col items-center justify-center">
+            {/* SVG Circular Donut Chart */}
+            <div className="relative flex items-center justify-center">
+              <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 100 100">
+                {/* Background Track Ring */}
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="38"
+                  className="text-slate-800/80 stroke-current"
+                  strokeWidth="10"
+                  fill="transparent"
                 />
-                <Legend
-                  formatter={(value) => <span className="text-xs text-slate-300">{value}</span>}
+                {/* Healthy Ring */}
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="38"
+                  className="text-emerald-500 transition-all duration-1000 ease-out stroke-current"
+                  strokeWidth="10"
+                  strokeDasharray="238.76"
+                  strokeDashoffset={
+                    238.76 - (238.76 * ((overview.healthyServices ?? 0) / Math.max(overview.totalServices || 1, 1)))
+                  }
+                  strokeLinecap="round"
+                  fill="transparent"
                 />
-              </PieChart>
-            </ResponsiveContainer>
+                {/* Degraded Ring */}
+                {(overview.degradedServices ?? 0) > 0 && (
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="38"
+                    className="text-amber-500 stroke-current"
+                    strokeWidth="10"
+                    strokeDasharray="238.76"
+                    strokeDashoffset={
+                      238.76 - (238.76 * ((overview.degradedServices ?? 0) / Math.max(overview.totalServices || 1, 1)))
+                    }
+                    strokeLinecap="round"
+                    fill="transparent"
+                  />
+                )}
+                {/* Down Ring */}
+                {(overview.downServices ?? 0) > 0 && (
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="38"
+                    className="text-red-500 stroke-current"
+                    strokeWidth="10"
+                    strokeDasharray="238.76"
+                    strokeDashoffset={
+                      238.76 - (238.76 * ((overview.downServices ?? 0) / Math.max(overview.totalServices || 1, 1)))
+                    }
+                    strokeLinecap="round"
+                    fill="transparent"
+                  />
+                )}
+              </svg>
+              {/* Center Metrics Text */}
+              <div className="absolute flex flex-col items-center justify-center">
+                <span className="text-2xl font-bold font-mono text-white">
+                  {overview.totalServices ?? 0}
+                </span>
+                <span className="text-[10px] uppercase font-mono text-slate-400 tracking-wider">
+                  Services
+                </span>
+              </div>
+            </div>
+
+            {/* Microservice Health Indicators */}
+            <div className="flex items-center space-x-3 mt-3 text-xs">
+              <span className="flex items-center text-emerald-400 font-medium">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block mr-1.5" />
+                Healthy
+              </span>
+              <span className="flex items-center text-amber-400 font-medium">
+                <span className="w-2 h-2 rounded-full bg-amber-500 inline-block mr-1.5" />
+                Degraded
+              </span>
+              <span className="flex items-center text-red-400 font-medium">
+                <span className="w-2 h-2 rounded-full bg-red-500 inline-block mr-1.5" />
+                Down
+              </span>
+            </div>
           </div>
 
           <div className="pt-3 border-t border-slate-800/80 grid grid-cols-3 text-center text-xs">

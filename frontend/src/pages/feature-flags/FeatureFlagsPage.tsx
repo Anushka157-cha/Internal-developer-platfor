@@ -107,9 +107,9 @@ export default function FeatureFlagsPage() {
                   <p className="text-sm text-gray-600 mb-3">{flag.description || 'No description'}</p>
                   
                   <div className="flex flex-wrap items-center gap-3">
-                    {flag.environments.length > 0 && (
+                    {(flag.environments || []).length > 0 && (
                       <div className="flex items-center space-x-2">
-                        {flag.environments.map((env) => (
+                        {(flag.environments || []).map((env) => (
                           <span
                             key={env}
                             className={`
