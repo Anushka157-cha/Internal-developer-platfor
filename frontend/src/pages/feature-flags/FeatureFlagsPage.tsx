@@ -73,6 +73,12 @@ export default function FeatureFlagsPage() {
     return <div className="text-center py-12">Loading...</div>
   }
 
+  const flagList: FeatureFlag[] = Array.isArray(flags)
+    ? flags
+    : Array.isArray((flags as any)?.data)
+    ? (flags as any).data
+    : []
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -91,10 +97,20 @@ export default function FeatureFlagsPage() {
         )}
       </div>
 
+      {flagList.length === 0 && (
+        <div className="bg-white rounded-xl shadow-sm p-12 text-center">
+          <Flag className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+          <h3 className="text-lg font-semibold text-gray-900">No Feature Flags</h3>
+          <p className="text-sm text-gray-500 max-w-md mx-auto mt-1">
+            No dynamic feature flags found. Click "Add Flag" to define a new rollout rule.
+          </p>
+        </div>
+      )}
+
       {/* Feature Flags List */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         <div className="divide-y divide-gray-200">
-          {flags?.map((flag) => (
+          {flagList.map((flag) => (
             <div key={flag.id} className="p-6 hover:bg-gray-50 transition-colors">
               <div className="flex items-start justify-between">
                 <div className="flex-1">

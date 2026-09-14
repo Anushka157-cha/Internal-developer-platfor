@@ -42,6 +42,12 @@ export default function AuditLogsPage() {
     }
   }
 
+  const auditList: AuditLog[] = Array.isArray(logs)
+    ? logs
+    : Array.isArray((logs as any)?.data)
+    ? (logs as any).data
+    : []
+
   if (isLoading) {
     return <div className="text-center py-12">Loading...</div>
   }
@@ -56,13 +62,16 @@ export default function AuditLogsPage() {
       {/* Audit Timeline */}
       <div className="bg-white rounded-xl shadow-sm p-6">
         <div className="space-y-4">
-          {logs?.map((log, index) => {
+          {auditList.map((log, index) => {
             const severityConfig = getSeverityConfig(log.severity || 'INFO')
             const SeverityIcon = severityConfig.icon
+            const actorFirst = log.actor?.firstName || (log as any)?.actorEmail?.split('@')[0] || 'Anushka'
+            const actorLast = log.actor?.lastName || ''
+            const actorRole = log.actor?.role || 'Admin'
             
             return (
               <div key={log.id} className="relative">
-                {index !== logs.length - 1 && (
+                {index !== auditList.length - 1 && (
                   <div className="absolute top-16 left-6 w-0.5 h-full bg-gray-200" />
                 )}
                 
@@ -85,15 +94,15 @@ export default function AuditLogsPage() {
 
                         {/* Action - Bigger & Bolder */}
                         <h3 className="text-lg font-bold text-gray-900 mb-2">
-                          {log.action.replace(/_/g, ' ')}
+                          {(log.action || 'ACTION').replace(/_/g, ' ')}
                         </h3>
 
                         {/* Actor - Secondary */}
                         <div className="flex items-center space-x-2 text-sm text-gray-600 mb-3">
                           <User className="h-4 w-4" />
-                          <span className="font-medium">{log.actor.firstName} {log.actor.lastName}</span>
+                          <span className="font-medium">{actorFirst} {actorLast}</span>
                           <span className="text-gray-400">·</span>
-                          <span className="capitalize text-gray-500">{log.actor.role}</span>
+                          <span className="capitalize text-gray-500">{actorRole}</span>
                         </div>
 
                         {log.metadata && Object.keys(log.metadata).length > 0 && (
@@ -113,7 +122,7 @@ export default function AuditLogsPage() {
                       {/* Timestamp - Lighter */}
                       <div className="flex items-center text-xs text-gray-400 whitespace-nowrap">
                         <Clock className="h-3.5 w-3.5 mr-1" />
-                        {new Date(log.createdAt).toLocaleString()}
+                        {new Date(log.createdAt || Date.now()).toLocaleString()}
                       </div>
                     </div>
                   </div>
@@ -122,7 +131,7 @@ export default function AuditLogsPage() {
             )
           })}
 
-          {logs?.length === 0 && (
+          {auditList.length === 0 && (
             <div className="p-12 text-center text-gray-500">
               <Shield className="h-12 w-12 mx-auto mb-4 text-gray-300" />
               <p>No audit logs yet</p>

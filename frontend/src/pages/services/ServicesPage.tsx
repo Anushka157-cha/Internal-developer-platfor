@@ -63,12 +63,20 @@ export default function ServicesPage() {
     return <div className="text-center py-12">Loading...</div>
   }
 
+  const serviceList: Service[] = Array.isArray(services)
+    ? services
+    : Array.isArray((services as any)?.data)
+    ? (services as any).data
+    : Array.isArray((services as any)?.services)
+    ? (services as any).services
+    : []
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Services</h1>
-          <p className="text-gray-600 mt-1">Manage your backend services</p>
+          <p className="text-gray-600 mt-1">Manage and monitor all platform microservices</p>
         </div>
         {canManage && (
           <button
@@ -81,66 +89,93 @@ export default function ServicesPage() {
         )}
       </div>
 
+      {/* Empty State */}
+      {serviceList.length === 0 && (
+        <div className="bg-white rounded-xl shadow-sm p-12 text-center">
+          <Server className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+          <h3 className="text-lg font-semibold text-gray-900">No Services Found</h3>
+          <p className="text-sm text-gray-500 max-w-md mx-auto mt-1">
+            No microservices are currently registered. Click "Add Service" to register your first service.
+          </p>
+        </div>
+      )}
+
       {/* Services Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {services?.map((service) => (
-          <div key={service.id} className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center">
-                <div className="p-2 bg-primary-100 rounded-lg">
-                  <Server className="h-6 w-6 text-primary-600" />
-                </div>
-                <div className="ml-3">
-                  <h3 className="font-semibold text-gray-900">{service.name}</h3>
-                  <span className={`
-                    text-xs px-2 py-1 rounded-full
-                    ${service.environment === 'prod' ? 'bg-red-100 text-red-700' : ''}
-                    ${service.environment === 'staging' ? 'bg-yellow-100 text-yellow-700' : ''}
-                    ${service.environment === 'dev' ? 'bg-blue-100 text-blue-700' : ''}
-                  `}>
-                    {service.environment}
-                  </span>
-                </div>
-              </div>
-              <span className={`
-                px-2 py-1 rounded-full text-xs font-medium
-                ${service.healthStatus === 'healthy' ? 'bg-green-100 text-green-800' : ''}
-                ${service.healthStatus === 'degraded' ? 'bg-yellow-100 text-yellow-800' : ''}
-                ${service.healthStatus === 'down' ? 'bg-red-100 text-red-800' : ''}
-              `}>
-                {service.healthStatus}
-              </span>
-            </div>
+        {serviceList.map((service) => {
+          const env = (service.environment || 'dev').toLowerCase()
+          const isProd = env === 'prod' || env === 'production'
+          const isStaging = env === 'staging'
+          const isDev = env === 'dev' || env === 'development'
 
-            <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-              {service.description || 'No description'}
-            </p>
+          const health = (service.healthStatus || (service as any).status || 'healthy').toLowerCase()
+          const isHealthy = health === 'healthy'
+          const isDegraded = health === 'degraded'
+          const isDown = health === 'down' || health === 'failed'
 
-            <div className="flex items-center justify-between pt-4 border-t">
-              <div className="text-xs text-gray-500">
-                Owner: {service.owner.firstName} {service.owner.lastName}
+          const ownerName = service.owner
+            ? `${service.owner.firstName || ''} ${service.owner.lastName || ''}`.trim()
+            : 'Platform Admin'
+
+          return (
+            <div key={service.id} className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center">
+                  <div className="p-2 bg-primary-100 rounded-lg">
+                    <Server className="h-6 w-6 text-primary-600" />
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="font-semibold text-gray-900">{service.name}</h3>
+                    <span className={`
+                      text-xs px-2 py-1 rounded-full
+                      ${isProd ? 'bg-red-100 text-red-700' : ''}
+                      ${isStaging ? 'bg-yellow-100 text-yellow-700' : ''}
+                      ${isDev ? 'bg-blue-100 text-blue-700' : ''}
+                    `}>
+                      {service.environment}
+                    </span>
+                  </div>
+                </div>
+                <span className={`
+                  px-2 py-1 rounded-full text-xs font-medium capitalize
+                  ${isHealthy ? 'bg-green-100 text-green-800' : ''}
+                  ${isDegraded ? 'bg-yellow-100 text-yellow-800' : ''}
+                  ${isDown ? 'bg-red-100 text-red-800' : ''}
+                `}>
+                  {health}
+                </span>
               </div>
-              <div className="flex space-x-2">
-                <Link
-                  to={`/services/${service.id}`}
-                  className="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                  title="View Details"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                </Link>
-                {canManage && (service.ownerId === user?.id || user?.role === 'admin') && (
-                  <button
-                    onClick={() => deleteMutation.mutate(service.id)}
-                    className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Delete"
+
+              <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                {service.description || 'No description provided'}
+              </p>
+
+              <div className="flex items-center justify-between pt-4 border-t">
+                <div className="text-xs text-gray-500">
+                  Owner: {ownerName || 'Platform Team'}
+                </div>
+                <div className="flex space-x-2">
+                  <Link
+                    to={`/services/${service.id}`}
+                    className="p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                    title="View Details"
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                )}
+                    <ExternalLink className="h-4 w-4" />
+                  </Link>
+                  {canManage && (service.ownerId === user?.id || user?.role === 'admin' || (user?.role as any) === 'ADMIN') && (
+                    <button
+                      onClick={() => deleteMutation.mutate(service.id)}
+                      className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {/* Create Service Modal */}

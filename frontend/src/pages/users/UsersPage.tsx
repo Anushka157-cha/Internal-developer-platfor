@@ -95,6 +95,12 @@ export default function UsersPage() {
     }
   };
 
+  const userList: any[] = Array.isArray(usersData?.data)
+    ? usersData.data
+    : Array.isArray(usersData)
+    ? (usersData as any)
+    : [];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -125,8 +131,8 @@ export default function UsersPage() {
       )}
 
       {/* Search Input */}
-      <div className="flex items-center space-x-3 bg-slate-950/70 p-3 rounded-xl border border-slate-800/80 max-w-md">
-        <Search className="h-4 w-4 text-slate-500" />
+      <div className="flex items-center space-x-3 bg-slate-900/90 px-3.5 py-2 rounded-lg border border-slate-800/80 max-w-md">
+        <Search className="h-4 w-4 text-slate-400" />
         <input
           type="text"
           placeholder="Filter by email or name..."
@@ -156,7 +162,7 @@ export default function UsersPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/50 text-slate-200">
-                {usersData?.data?.map((u) => (
+                {userList.map((u) => (
                   <tr key={u.id} className="hover:bg-slate-900/40 transition-colors">
                     <td className="py-3 px-4 font-semibold text-white">
                       {u.firstName} {u.lastName}

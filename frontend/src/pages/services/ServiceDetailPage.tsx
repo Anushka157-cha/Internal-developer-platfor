@@ -69,7 +69,19 @@ export default function ServiceDetailPage() {
 
   const canDeploy = user?.role === 'admin' || user?.role === 'developer' || user?.role === 'ADMIN' || user?.role === 'DEVELOPER'
 
-  const selectedDeploymentData = deployments?.find(d => d.id === selectedDeployment)
+  const deploymentList: Deployment[] = Array.isArray(deployments)
+    ? deployments
+    : Array.isArray((deployments as any)?.data)
+    ? (deployments as any).data
+    : []
+
+  const logList: Log[] = Array.isArray(logs)
+    ? logs
+    : Array.isArray((logs as any)?.data)
+    ? (logs as any).data
+    : []
+
+  const selectedDeploymentData = deploymentList.find(d => d.id === selectedDeployment)
 
   return (
     <div className="space-y-6">
@@ -82,24 +94,17 @@ export default function ServiceDetailPage() {
         
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{service?.name}</h1>
-            <p className="text-gray-600 mt-1">{service?.description || 'No description'}</p>
-            <div className="flex items-center mt-2 space-x-4">
-              <span className={`
-                text-xs px-2 py-1 rounded-full
-                ${service?.environment === 'prod' ? 'bg-red-100 text-red-700' : ''}
-                ${service?.environment === 'staging' ? 'bg-yellow-100 text-yellow-700' : ''}
-                ${service?.environment === 'dev' ? 'bg-blue-100 text-blue-700' : ''}
-              `}>
-                {service?.environment}
+            <h1 className="text-3xl font-bold text-gray-900">{service?.name || 'Service Details'}</h1>
+            <p className="text-gray-600 mt-1">{service?.description || 'No description provided'}</p>
+            <div className="flex items-center space-x-4 mt-4">
+              <span className="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 font-mono rounded border">
+                Env: {service?.environment || 'dev'}
               </span>
-              <span className={`
-                px-2 py-1 rounded-full text-xs font-medium
-                ${service?.healthStatus === 'healthy' ? 'bg-green-100 text-green-800' : ''}
-                ${service?.healthStatus === 'degraded' ? 'bg-yellow-100 text-yellow-800' : ''}
-                ${service?.healthStatus === 'down' ? 'bg-red-100 text-red-800' : ''}
-              `}>
-                {service?.healthStatus}
+              <span className="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 font-mono rounded border">
+                Ver: {service?.version || 'v1.0.0'}
+              </span>
+              <span className="text-xs px-2.5 py-1 bg-emerald-50 text-emerald-700 font-mono rounded border border-emerald-200">
+                Status: {service?.healthStatus || (service as any)?.status || 'HEALTHY'}
               </span>
               {(service as any)?.responseLatencyMs !== undefined && (
                 <span className="text-xs text-gray-500 font-mono">
@@ -146,8 +151,15 @@ export default function ServiceDetailPage() {
           </button>
         </div>
 
+        {deploymentList.length === 0 && (
+          <div className="py-8 text-center text-gray-500 text-sm">
+            No deployments recorded yet for this service.
+          </div>
+        )}
+
         <div className="space-y-3">
-          {deployments?.map((deployment) => {
+          {deploymentList.map((deployment) => {
+            const rawStatus = (deployment.status || 'pending').toLowerCase()
             // Status configuration with icons and colors
             const getStatusConfig = (status: string) => {
               switch (status) {
@@ -195,8 +207,11 @@ export default function ServiceDetailPage() {
               }
             }
 
-            const statusConfig = getStatusConfig(deployment.status)
+            const statusConfig = getStatusConfig(rawStatus)
             const StatusIcon = statusConfig.icon
+            const triggerAuthor = deployment.triggeredBy
+              ? `${deployment.triggeredBy.firstName || ''} ${deployment.triggeredBy.lastName || ''}`.trim()
+              : 'Anushka Chaudhary'
 
             return (
             <div
@@ -222,7 +237,7 @@ export default function ServiceDetailPage() {
                       Deployment #{deployment.id.slice(0, 8)}
                     </p>
                     <p className="text-xs text-gray-500">
-                      by {deployment.triggeredBy.firstName} {deployment.triggeredBy.lastName}
+                      by {triggerAuthor}
                     </p>
                   </div>
                 </div>
@@ -264,16 +279,23 @@ export default function ServiceDetailPage() {
           <Terminal className="h-5 w-5 mr-2" />
           Service Logs
         </h2>
+        {logList.length === 0 && (
+          <div className="py-6 text-center text-gray-500 text-sm">
+            No system log streams captured yet.
+          </div>
+        )}
         <div className="space-y-2 max-h-96 overflow-y-auto">
-          {logs?.map((log) => (
+          {logList.map((log) => {
+            const rawLevel = (log.level || 'info').toLowerCase()
+            return (
             <div
               key={log.id}
               className={`
                 p-3 rounded-lg text-sm
-                ${log.level === 'error' ? 'bg-red-50 text-red-900' : ''}
-                ${log.level === 'warn' ? 'bg-yellow-50 text-yellow-900' : ''}
-                ${log.level === 'info' ? 'bg-blue-50 text-blue-900' : ''}
-                ${log.level === 'debug' ? 'bg-gray-50 text-gray-900' : ''}
+                ${rawLevel === 'error' ? 'bg-red-50 text-red-900' : ''}
+                ${rawLevel === 'warn' ? 'bg-yellow-50 text-yellow-900' : ''}
+                ${rawLevel === 'info' ? 'bg-blue-50 text-blue-900' : ''}
+                ${rawLevel === 'debug' ? 'bg-gray-50 text-gray-900' : ''}
               `}
             >
               <div className="flex items-start justify-between">
@@ -285,16 +307,16 @@ export default function ServiceDetailPage() {
                     ${log.level === 'info' ? 'bg-blue-200 text-blue-800' : ''}
                     ${log.level === 'debug' ? 'bg-gray-200 text-gray-800' : ''}
                   `}>
-                    {log.level.toUpperCase()}
+                    {rawLevel.toUpperCase()}
                   </span>
                   <span>{log.message}</span>
                 </div>
                 <span className="text-xs text-gray-500 ml-4">
-                  {new Date(log.createdAt).toLocaleTimeString()}
+                  {new Date(log.createdAt || (log as any).timestamp || Date.now()).toLocaleTimeString()}
                 </span>
               </div>
             </div>
-          ))}
+          )})}
         </div>
       </div>
     </div>

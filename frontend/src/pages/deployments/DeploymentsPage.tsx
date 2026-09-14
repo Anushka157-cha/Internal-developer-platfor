@@ -142,48 +142,56 @@ export default function DeploymentsPage() {
     }
   };
 
+  const deploymentItems: DeploymentItem[] = Array.isArray(deploymentsData?.data)
+    ? deploymentsData.data
+    : Array.isArray(deploymentsData)
+    ? (deploymentsData as any)
+    : [];
+
+  const serviceOptions: ServiceItem[] = Array.isArray(services)
+    ? services
+    : Array.isArray((services as any)?.data)
+    ? (services as any).data
+    : [];
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-slate-800 gap-4">
+      {/* Top Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white flex items-center space-x-2">
+          <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
             <Rocket className="h-6 w-6 text-indigo-400" />
-            <span>Deployments Management</span>
+            Deployments
           </h1>
-          <p className="text-sm text-slate-400 mt-0.5">
-            BullMQ queued asynchronous deployment state machine with zero-downtime rollback capabilities.
+          <p className="text-xs text-slate-400 mt-1">
+            Real-time pipeline orchestration powered by BullMQ Redis queue & SSE log telemetry
           </p>
         </div>
-        <div className="flex items-center space-x-3">
+
+        <div className="flex items-center gap-3">
           <button
             onClick={() => refetch()}
-            className="p-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 rounded-lg text-sm transition-colors"
-            title="Refresh deployments"
+            className="p-2 text-slate-400 hover:text-white bg-slate-900 border border-slate-800 rounded-lg hover:bg-slate-800 transition-colors"
+            title="Refresh Deployments"
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
+
           {canDeploy && (
             <button
-              onClick={() => {
-                setModalError('');
-                setIsModalOpen(true);
-              }}
-              className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold shadow-lg shadow-indigo-600/20 transition-all"
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition-colors shadow-lg shadow-indigo-500/20"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 mr-1.5" />
               New Deployment
             </button>
           )}
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="flex flex-wrap items-center gap-3 bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
-        <div className="flex items-center text-xs text-slate-400 font-mono space-x-2">
-          <Filter className="h-3.5 w-3.5 text-slate-500" />
-          <span>Filter Status:</span>
-        </div>
+      {/* Filter Tabs */}
+      <div className="flex items-center space-x-2 border-b border-slate-800 pb-3">
+        <Filter className="h-3.5 w-3.5 text-slate-500 mr-1" />
         {['', 'queued', 'running', 'success', 'failed'].map((st) => (
           <button
             key={st}
@@ -205,7 +213,7 @@ export default function DeploymentsPage() {
           <div className="py-12 flex justify-center items-center">
             <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
-        ) : !deploymentsData?.data || deploymentsData.data.length === 0 ? (
+        ) : deploymentItems.length === 0 ? (
           <div className="py-16 text-center">
             <Rocket className="h-12 w-12 text-slate-600 mx-auto mb-3" />
             <h3 className="text-base font-semibold text-slate-300">No deployments found</h3>
@@ -229,7 +237,7 @@ export default function DeploymentsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/50 text-slate-200">
-                {deploymentsData.data.map((dep) => (
+                {deploymentItems.map((dep) => (
                   <tr key={dep.id} className="hover:bg-slate-900/40 transition-colors">
                     <td className="py-3 px-4 font-semibold text-white">
                       <div className="flex items-center space-x-2">
@@ -347,9 +355,9 @@ export default function DeploymentsPage() {
                   className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-indigo-500"
                 >
                   <option value="">Select a registered service...</option>
-                  {services?.map((s) => (
+                  {serviceOptions.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.name} ({s.environment.toUpperCase()}) - Current: {s.currentVersion || 'v1.0.0'}
+                      {s.name} ({(s.environment || 'dev').toUpperCase()}) - Current: {s.currentVersion || (s as any).version || 'v1.0.0'}
                     </option>
                   ))}
                 </select>

@@ -20,6 +20,12 @@ export default function LogsPage() {
     },
   })
 
+  const logList: Log[] = Array.isArray(logs)
+    ? logs
+    : Array.isArray((logs as any)?.data)
+    ? (logs as any).data
+    : []
+
   if (isLoading) {
     return <div className="text-center py-12">Loading...</div>
   }
@@ -80,36 +86,44 @@ export default function LogsPage() {
         <div className="flex items-center mb-4">
           <Terminal className="h-5 w-5 text-gray-500 mr-2" />
           <h2 className="text-lg font-semibold text-gray-900">Log Stream</h2>
-          <span className="ml-auto text-sm text-gray-500">{logs?.length} entries</span>
+          <span className="ml-auto text-sm text-gray-500">{logList.length} entries</span>
         </div>
 
+        {logList.length === 0 && (
+          <div className="py-12 text-center text-gray-500 font-mono text-sm">
+            No system log records available.
+          </div>
+        )}
+
         <div className="space-y-1 max-h-[600px] overflow-y-auto font-mono text-sm">
-          {logs?.map((log) => (
+          {logList.map((log) => {
+            const rawLevel = (log.level || 'info').toLowerCase()
+            return (
             <div
               key={log.id}
               className={`
                 p-3 rounded border-l-4 hover:bg-gray-50 transition-colors
-                ${log.level === 'error' ? 'border-l-red-500 bg-red-50/50' : ''}
-                ${log.level === 'warn' ? 'border-l-yellow-500 bg-yellow-50/50' : ''}
-                ${log.level === 'info' ? 'border-l-blue-500 bg-blue-50/50' : ''}
-                ${log.level === 'debug' ? 'border-l-gray-500 bg-gray-50' : ''}
+                ${rawLevel === 'error' ? 'border-l-red-500 bg-red-50/50' : ''}
+                ${rawLevel === 'warn' ? 'border-l-yellow-500 bg-yellow-50/50' : ''}
+                ${rawLevel === 'info' ? 'border-l-blue-500 bg-blue-50/50' : ''}
+                ${rawLevel === 'debug' ? 'border-l-gray-500 bg-gray-50' : ''}
               `}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 flex items-start space-x-3">
                   <span className="text-xs text-gray-500 whitespace-nowrap">
-                    {new Date(log.createdAt).toLocaleTimeString()}
+                    {new Date(log.createdAt || (log as any).timestamp || Date.now()).toLocaleTimeString()}
                   </span>
                   <span className={`
                     px-2 py-0.5 rounded text-xs font-semibold uppercase
-                    ${log.level === 'error' ? 'bg-red-200 text-red-800' : ''}
-                    ${log.level === 'warn' ? 'bg-yellow-200 text-yellow-800' : ''}
-                    ${log.level === 'info' ? 'bg-blue-200 text-blue-800' : ''}
-                    ${log.level === 'debug' ? 'bg-gray-200 text-gray-800' : ''}
+                    ${rawLevel === 'error' ? 'bg-red-200 text-red-800' : ''}
+                    ${rawLevel === 'warn' ? 'bg-yellow-200 text-yellow-800' : ''}
+                    ${rawLevel === 'info' ? 'bg-blue-200 text-blue-800' : ''}
+                    ${rawLevel === 'debug' ? 'bg-gray-200 text-gray-800' : ''}
                   `}>
-                    {log.level}
+                    {rawLevel}
                   </span>
-                  <span className="flex-1 text-gray-900">{log.message}</span>
+                  <span className="text-gray-900 flex-1">{log.message}</span>
                 </div>
               </div>
               
@@ -119,9 +133,9 @@ export default function LogsPage() {
                 </div>
               )}
             </div>
-          ))}
+          )})}
 
-          {logs?.length === 0 && (
+          {logList.length === 0 && (
             <div className="p-12 text-center text-gray-500">
               <Terminal className="h-12 w-12 mx-auto mb-4 text-gray-300" />
               <p>No logs found</p>
