@@ -189,9 +189,12 @@ export default function DeploymentDetailPage() {
     );
   }
 
-  const currentStatus = liveStatus || deployment.status;
+  const currentStatus = liveStatus || deployment.status || 'running';
   const currentStep = liveStep || deployment.currentStep || 'QUEUED';
   const currentProgress = liveProgress || deployment.progressPercentage || 0;
+  const targetEnv = (deployment.environment || deployment.service?.environment || 'prod').toUpperCase();
+  const serviceName = deployment.service?.name || 'Microservice';
+  const depVersion = deployment.version || 'v1.0.0';
 
   const isFailed = currentStatus === 'failed';
   const isSuccess = currentStatus === 'success';
@@ -219,10 +222,10 @@ export default function DeploymentDetailPage() {
           <div>
             <div className="flex items-center space-x-2">
               <h1 className="text-xl font-bold text-white tracking-tight">
-                {deployment.service?.name}
+                {serviceName}
               </h1>
               <span className="text-xs font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-cyan-300 font-bold">
-                {deployment.version}
+                {depVersion}
               </span>
               {deployment.isRollback && (
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-950/80 border border-amber-800 text-amber-300 flex items-center">
@@ -231,7 +234,7 @@ export default function DeploymentDetailPage() {
               )}
             </div>
             <p className="text-xs text-slate-400 font-mono mt-0.5">
-              ID: {deployment.id} • Environment: {deployment.environment.toUpperCase()}
+              ID: {deployment.id} • Environment: {targetEnv}
             </p>
           </div>
         </div>
@@ -350,15 +353,15 @@ export default function DeploymentDetailPage() {
           <div className="space-y-3 font-mono">
             <div>
               <span className="text-slate-500 block text-[11px]">Service</span>
-              <span className="text-slate-200 font-semibold">{deployment.service?.name}</span>
+              <span className="text-slate-200 font-semibold">{serviceName}</span>
             </div>
             <div>
               <span className="text-slate-500 block text-[11px]">Version Target</span>
-              <span className="text-cyan-300 font-semibold">{deployment.version}</span>
+              <span className="text-cyan-300 font-semibold">{depVersion}</span>
             </div>
             <div>
               <span className="text-slate-500 block text-[11px]">Target Environment</span>
-              <span className="text-slate-200 uppercase">{deployment.environment}</span>
+              <span className="text-slate-200 uppercase">{targetEnv}</span>
             </div>
             <div>
               <span className="text-slate-500 block text-[11px]">Execution Status</span>
@@ -380,7 +383,7 @@ export default function DeploymentDetailPage() {
             </div>
             <div>
               <span className="text-slate-500 block text-[11px]">Initiated At</span>
-              <span className="text-slate-400">{new Date(deployment.createdAt).toLocaleString()}</span>
+              <span className="text-slate-400">{new Date(deployment.createdAt || Date.now()).toLocaleString()}</span>
             </div>
           </div>
         </div>

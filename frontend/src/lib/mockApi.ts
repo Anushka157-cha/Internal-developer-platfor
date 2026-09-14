@@ -774,8 +774,22 @@ export async function handleMockRequest(method: string, path: string, data?: any
   if (depDetailMatch && normalizedMethod === 'GET') {
     const depId = depDetailMatch[1];
     const deployments = getStored<any[]>(STORAGE_KEYS.DEPLOYMENTS, defaultDeployments);
-    const dep = deployments.find((d) => d.id === depId);
-    return dep || deployments[0] || null;
+    let dep = deployments.find((d) => d.id === depId);
+    if (!dep) dep = deployments[0];
+    if (dep) {
+      if (!dep.environment) {
+        dep.environment = dep.service?.environment || 'prod';
+      }
+      if (!dep.service) {
+        dep.service = {
+          id: dep.serviceId || 'srv-pay-prod',
+          name: 'payment-gateway',
+          environment: dep.environment || 'prod',
+          healthEndpoint: '/api/v1/health',
+        };
+      }
+    }
+    return dep || null;
   }
 
   // Rollback: /deployments/:id/rollback
