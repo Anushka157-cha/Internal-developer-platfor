@@ -393,6 +393,7 @@ export async function handleMockRequest(method: string, path: string, data?: any
   if (cleanPath === '/dashboard/metrics') {
     const services = getStored<any[]>(STORAGE_KEYS.SERVICES, defaultServices);
     const deployments = getStored<any[]>(STORAGE_KEYS.DEPLOYMENTS, defaultDeployments);
+    const flags = getStored<any[]>(STORAGE_KEYS.FLAGS, defaultFlags);
 
     const healthyCount = services.filter((s) => s.status === 'HEALTHY').length;
     const degradedCount = services.filter((s) => s.status === 'DEGRADED').length;
@@ -400,27 +401,36 @@ export async function handleMockRequest(method: string, path: string, data?: any
     const successfulCount = deployments.filter((d) => d.status === 'SUCCESS').length;
     const failedCount = deployments.filter((d) => d.status === 'FAILED').length;
     const totalDeps = deployments.length;
-    const successRate = totalDeps > 0 ? ((successfulCount / totalDeps) * 100).toFixed(1) : '100.0';
+    const successRate = totalDeps > 0 ? parseFloat(((successfulCount / totalDeps) * 100).toFixed(1)) : 100.0;
 
     return {
-      totalServices: services.length,
-      healthyServices: healthyCount,
-      degradedServices: degradedCount,
-      downServices: downCount,
-      totalDeployments: totalDeps,
-      activeDeployments: deployments.filter((d) => ['QUEUED', 'BUILDING', 'TESTING', 'DEPLOYING'].includes(d.status)).length,
-      successfulDeployments: successfulCount,
-      failedDeployments: failedCount,
-      successRate: parseFloat(successRate),
-      avgDuration: 46,
-      deploymentsPerDay: [
-        { date: '2026-09-08', count: 4 },
-        { date: '2026-09-09', count: 7 },
-        { date: '2026-09-10', count: 5 },
-        { date: '2026-09-11', count: 9 },
-        { date: '2026-09-12', count: 6 },
-        { date: '2026-09-13', count: 8 },
-        { date: '2026-09-14', count: 12 },
+      overview: {
+        totalServices: services.length,
+        healthyServices: healthyCount,
+        degradedServices: degradedCount,
+        downServices: downCount,
+        totalDeployments: totalDeps,
+        activeDeployments: deployments.filter((d) => ['QUEUED', 'BUILDING', 'TESTING', 'DEPLOYING'].includes(d.status)).length,
+        successfulDeployments: successfulCount,
+        failedDeployments: failedCount,
+        deploymentSuccessRate: successRate,
+        averageDeploymentDurationSeconds: 46,
+        totalFeatureFlags: flags.length,
+      },
+      deploymentTrends: [
+        { day: 'Mon', date: 'Sep 08', deployments: 4, successful: 4, failed: 0 },
+        { day: 'Tue', date: 'Sep 09', deployments: 7, successful: 6, failed: 1 },
+        { day: 'Wed', date: 'Sep 10', deployments: 5, successful: 5, failed: 0 },
+        { day: 'Thu', date: 'Sep 11', deployments: 9, successful: 8, failed: 1 },
+        { day: 'Fri', date: 'Sep 12', deployments: 6, successful: 6, failed: 0 },
+        { day: 'Sat', date: 'Sep 13', deployments: 8, successful: 7, failed: 1 },
+        { day: 'Sun', date: 'Sep 14', deployments: 12, successful: 12, failed: 0 },
+      ],
+      recentDeployments: deployments.slice(0, 5),
+      serviceHealthDistribution: [
+        { name: 'Healthy', value: healthyCount || 1, color: '#10b981' },
+        { name: 'Degraded', value: degradedCount, color: '#f59e0b' },
+        { name: 'Down', value: downCount, color: '#ef4444' },
       ],
     };
   }
@@ -506,7 +516,14 @@ export async function handleMockRequest(method: string, path: string, data?: any
     if (serviceId) {
       return deployments.filter((d) => d.serviceId === serviceId);
     }
-    return deployments;
+    return {
+      data: deployments,
+      meta: {
+        total: deployments.length,
+        page: 1,
+        totalPages: 1,
+      },
+    };
   }
 
   // POST /deployments

@@ -110,40 +110,55 @@ export default function DashboardPage() {
     );
   }
 
-  const { overview, deploymentTrends, recentDeployments, serviceHealthDistribution } = metrics;
+  const overview = metrics?.overview || {
+    totalServices: 0,
+    healthyServices: 0,
+    degradedServices: 0,
+    downServices: 0,
+    totalDeployments: 0,
+    activeDeployments: 0,
+    successfulDeployments: 0,
+    failedDeployments: 0,
+    deploymentSuccessRate: 100,
+    averageDeploymentDurationSeconds: 0,
+    totalFeatureFlags: 0,
+  };
+  const deploymentTrends = metrics?.deploymentTrends || [];
+  const recentDeployments = metrics?.recentDeployments || [];
+  const serviceHealthDistribution = metrics?.serviceHealthDistribution || [];
 
   const statCards = [
     {
       name: 'Registered Services',
-      value: overview.totalServices,
-      subValue: `${overview.healthyServices} Healthy • ${overview.degradedServices} Degraded`,
+      value: overview.totalServices ?? 0,
+      subValue: `${overview.healthyServices ?? 0} Healthy • ${overview.degradedServices ?? 0} Degraded`,
       icon: Server,
       accent: 'border-blue-500/30 bg-blue-500/10 text-blue-400',
     },
     {
       name: 'Deployments Processed',
-      value: overview.totalDeployments,
-      subValue: `${overview.successfulDeployments} Successful • ${overview.failedDeployments} Failed`,
+      value: overview.totalDeployments ?? 0,
+      subValue: `${overview.successfulDeployments ?? 0} Successful • ${overview.failedDeployments ?? 0} Failed`,
       icon: Rocket,
       accent: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400',
     },
     {
       name: 'Success Rate',
-      value: `${overview.deploymentSuccessRate}%`,
+      value: `${overview.deploymentSuccessRate ?? 100}%`,
       subValue: overview.totalDeployments === 0 ? 'No deployments yet' : `Calculated across all runs`,
       icon: CheckCircle2,
       accent: 'border-cyan-500/30 bg-cyan-500/10 text-cyan-400',
     },
     {
       name: 'Avg Deployment Duration',
-      value: `${overview.averageDeploymentDurationSeconds}s`,
+      value: `${overview.averageDeploymentDurationSeconds ?? 0}s`,
       subValue: 'Real duration from queue to health-check',
       icon: Clock,
       accent: 'border-amber-500/30 bg-amber-500/10 text-amber-400',
     },
     {
       name: 'Active Feature Flags',
-      value: overview.totalFeatureFlags,
+      value: overview.totalFeatureFlags ?? 0,
       subValue: 'SHA-256 deterministic rollout',
       icon: Flag,
       accent: 'border-purple-500/30 bg-purple-500/10 text-purple-400',
