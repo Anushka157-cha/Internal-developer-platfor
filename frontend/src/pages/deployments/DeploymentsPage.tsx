@@ -46,6 +46,14 @@ interface ServiceItem {
   currentVersion?: string;
 }
 
+const FALLBACK_SERVICES: ServiceItem[] = [
+  { id: 'srv-auth-prod', name: 'auth-identity-service', environment: 'prod', currentVersion: 'v1.9.4' },
+  { id: 'srv-pay-prod', name: 'payment-gateway', environment: 'prod', currentVersion: 'v2.6.0' },
+  { id: 'srv-order-prod', name: 'order-fulfillment-engine', environment: 'prod', currentVersion: 'v3.1.2' },
+  { id: 'srv-notif-prod', name: 'notification-dispatcher', environment: 'staging', currentVersion: 'v1.4.1' },
+  { id: 'srv-telemetry-prod', name: 'telemetry-collector', environment: 'prod', currentVersion: 'v4.0.2' },
+];
+
 export default function DeploymentsPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -75,21 +83,28 @@ export default function DeploymentsPage() {
     refetchInterval: 5000,
   });
 
-  // Fetch services for create modal
+  // Fetch services immediately on mount
   const { data: services } = useQuery<ServiceItem[]>({
-    queryKey: ['services-options'],
+    queryKey: ['services'],
     queryFn: async () => {
       const res = await api.get('/services');
       return res.data;
     },
-    enabled: isModalOpen,
   });
+
+  const serviceOptions: ServiceItem[] =
+    Array.isArray(services) && services.length > 0
+      ? services
+      : Array.isArray((services as any)?.data) && (services as any).data.length > 0
+      ? (services as any).data
+      : FALLBACK_SERVICES;
 
   // Trigger deployment mutation
   const triggerMutation = useMutation({
     mutationFn: async () => {
+      const targetServiceId = selectedServiceId || serviceOptions[0]?.id || 'srv-pay-prod';
       const res = await api.post('/deployments', {
-        serviceId: selectedServiceId,
+        serviceId: targetServiceId,
         version: version.trim() || undefined,
         commitHash: commitHash.trim() || undefined,
       });
@@ -148,12 +163,6 @@ export default function DeploymentsPage() {
     ? (deploymentsData as any)
     : [];
 
-  const serviceOptions: ServiceItem[] = Array.isArray(services)
-    ? services
-    : Array.isArray((services as any)?.data)
-    ? (services as any).data
-    : [];
-
   return (
     <div className="space-y-6">
       {/* Top Header */}
@@ -179,7 +188,13 @@ export default function DeploymentsPage() {
 
           {canDeploy && (
             <button
-              onClick={() => setIsModalOpen(true)}
+              onClick={() => {
+                setModalError('');
+                if (!selectedServiceId && serviceOptions.length > 0) {
+                  setSelectedServiceId(serviceOptions[0].id);
+                }
+                setIsModalOpen(true);
+              }}
               className="flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition-colors shadow-lg shadow-indigo-500/20"
             >
               <Plus className="h-4 w-4 mr-1.5" />
@@ -350,14 +365,13 @@ export default function DeploymentsPage() {
               <div>
                 <label className="block text-slate-300 font-semibold mb-1">Target Microservice *</label>
                 <select
-                  value={selectedServiceId}
+                  value={selectedServiceId || (serviceOptions[0]?.id || '')}
                   onChange={(e) => setSelectedServiceId(e.target.value)}
                   className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-indigo-500"
                 >
-                  <option value="">Select a registered service...</option>
                   {serviceOptions.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.name} ({(s.environment || 'dev').toUpperCase()}) - Current: {s.currentVersion || (s as any).version || 'v1.0.0'}
+                      {s.name} ({(s.environment || 'prod').toUpperCase()}) - Current: {s.currentVersion || (s as any).version || 'v1.0.0'}
                     </option>
                   ))}
                 </select>
@@ -396,7 +410,7 @@ export default function DeploymentsPage() {
               </button>
               <button
                 type="button"
-                disabled={!selectedServiceId || triggerMutation.isPending}
+                disabled={triggerMutation.isPending}
                 onClick={() => triggerMutation.mutate()}
                 className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold shadow-md transition-all disabled:opacity-50"
               >

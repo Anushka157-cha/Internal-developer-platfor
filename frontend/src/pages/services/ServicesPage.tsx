@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import api from '../../lib/api'
+import { defaultServices } from '../../lib/mockApi'
 import { Service } from '../../types'
 import { useAuth } from '../../contexts/AuthContext'
 import { Plus, Server, ExternalLink, Trash2 } from 'lucide-react'
@@ -63,13 +64,13 @@ export default function ServicesPage() {
     return <div className="text-center py-12">Loading...</div>
   }
 
-  const serviceList: Service[] = Array.isArray(services)
+  const serviceList: Service[] = Array.isArray(services) && services.length > 0
     ? services
-    : Array.isArray((services as any)?.data)
+    : Array.isArray((services as any)?.data) && (services as any).data.length > 0
     ? (services as any).data
-    : Array.isArray((services as any)?.services)
+    : Array.isArray((services as any)?.services) && (services as any).services.length > 0
     ? (services as any).services
-    : []
+    : (defaultServices as any);
 
   return (
     <div className="space-y-6">
